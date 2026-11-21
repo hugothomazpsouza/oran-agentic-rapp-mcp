@@ -294,8 +294,34 @@ Se o ambiente já foi instalado anteriormente e você apenas desligou/religou a 
 
 ---
 
-## Próximos Passos Planejados
+## Servidores MCP (`nonrtric_mcp_server.py` vs. `zsm_closed_loop/zsm_mcp_server.py`)
 
-1. **Loop Fechado (ZSM):** adicionar ferramenta MCP `get_cell_kpis(cell_id)` lendo métricas simuladas de PRB/latência para o rApp detectar anomalias e ajustar políticas A1 autonomamente.
-2. **Benchmark Automatizado:** registrar em CSV latência por passo, validade de argumentos, taxa de sucesso e consumo de tokens comparando `gemini-3.5-flash-lite`, `qwen2.5:3b` e `qwen2.5:7b`.
-3. **Camada de Governança (Guardian/Validador):** validar limites operacionais (ex.: faixa permitida de `priorityLevel` e conflito entre slices) antes de confirmar o `PUT` no PMS.
+O laboratório mantém os dois servidores MCP isolados por fase (`nonrtric_mcp_server.py` na raiz para a Fase 1 manual/IBN e `zsm_closed_loop/zsm_mcp_server.py` para a Fase 2 de loop fechado ZSM), evitando alterar o fluxo que já está em operação.
+
+### Ferramentas Compartilhadas do Non-RT RIC (A1 PMS — `:8081`)
+
+Ambos os servidores expõem a API REST do Non-RT RIC (`http://localhost:8081/a1-policy/v2`) como ferramentas tipadas via MCP (`stdio` / JSON-RPC 2.0):
+
+- `list_near_rt_rics`: lista os Near-RT RICs registrados (ex.: `ric1`), os elementos gerenciados (`kista_1`, `kista_2`), os `policytype_ids` suportados e o estado (`AVAILABLE`).
+- `get_policy_type_schema`: consulta o JSON Schema obrigatório de um `policytype_id` (ex.: `1` — `QoS_Policy`) antes de criar ou atualizar uma instância de política.
+- `list_active_policies`: lista os IDs das políticas A1 atualmente ativas no Non-RT RIC.
+- `apply_a1_policy`: cria ou atualiza uma política A1 (`PUT /policies`) para um `ric_id`, `policy_id` e `policytype_id` seguindo o schema validado.
+
+_(Na Fase 1, `nonrtric_mcp_server.py` também inclui operações manuais de consulta e remoção de políticas, como `get_policy_details` e `delete_a1_policy`, enquanto `zsm_closed_loop/zsm_mcp_server.py` adiciona `get_cell_kpis` apontando para o simulador de telemetria O1 na porta `8090` para o ciclo fechado autônomo.)_
+
+### Por que manter dois arquivos separados?
+
+- **Isolamento entre fases:** você pode evoluir o loop ZSM (`zsm_closed_loop/`) sem risco de quebrar os testes manuais de IBN da raiz (`agent_rapp.py` e `agent_rapp_ollama.py`).
+- **Reprodutibilidade:** cada agente (`stdio`) sobe o seu respectivo servidor MCP como subprocesso local (`sys.executable`), sem depender de container extra para o MCP.
+
+## Modelo Local via Ollama (`qwen2.5:3b`)
+
+Para execução 100% local, offline e sem custo de API, o laboratório utiliza o **`qwen2.5:3b`** servido pelo **Ollama** na própria VM:
+
+- **O que é:** modelo compacto (_Small Language Model_, ~3B de parâmetros) da família Qwen 2.5 com bom desempenho em raciocínio estruturado, formatação JSON e _tool calling_ (chamada de ferramentas MCP).
+- **Vantagens no lab:** custo zero de tokens/API, privacidade/execução local e autonomia em relação a limites de requisição externos.
+- **Trade-offs observados:** por rodar em CPU sem GPU dedicada, a inferência leva mais segundos por passo do que modelos em nuvem (sendo adequado ao ciclo de decisão do **Non-RT RIC** / interface A1, mas não ao controle de milissegundos da interface E2 no Near-RT RIC) e pode exigir prompts objetivos para manter a sequência de ferramentas.
+- **Comandos úteis:**
+  - Verificar modelos disponíveis: `ollama list`
+  - Baixar ou atualizar o modelo: `ollama pull qwen2.5:3b`
+  - Liberar memória RAM imediatamente após os testes: `ollama stop qwen2.5:3b`
