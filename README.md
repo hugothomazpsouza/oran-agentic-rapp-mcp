@@ -14,6 +14,10 @@ oran-agentic-rapp-mcp/
 ├── nonrtric_mcp_server.py     # Servidor MCP conectado à API REST do Non-RT RIC (PMS)
 ├── agent_rapp.py              # rApp Agêntico (MCP Client) usando Gemini API (nuvem)
 └── agent_rapp_ollama.py       # rApp Agêntico (MCP Client) usando Ollama local (CPU)
+├── STARTUP.md                 # Runbook rápido para religar containers e retomar testes após restart da VM
+├── docs/
+│   └── arquitetura-oran.md    # Conceitos O-RAN e mapeamento físico (Torre vs. Edge vs. Cloud)
+└── zsm_closed_loop/           # Fase 2: Loop fechado ZSM com telemetria O1 simulada
 ```
 
 | Arquivo                  | Papel na Arquitetura          | O que faz                                                                                                                                                                                                                                   |
@@ -270,6 +274,10 @@ curl -s http://localhost:8081/a1-policy/v2/policies/pol-urllc-01 | jq .
 curl -s http://localhost:8085/a1-p/policytypes/1/policies/pol-urllc-01 | jq .
 curl -s http://localhost:8085/a1-p/policytypes/1/policies/pol-local-01 | jq .
 ```
+
+## Retomando o Lab após desligar a VM
+
+Se o ambiente já foi instalado anteriormente e você apenas desligou/religou a VM na Google Cloud, não é necessário refazer a instalação completa. Siga o guia rápido em **[STARTUP.md](STARTUP.md)** para religar os containers Docker (`policy-agent` e `a1-sim-osc-0`), recadastrar o `Policy Type 1` em memória e iniciar os testes da Fase 1 ou da Fase 2 (`zsm_closed_loop/`).
 
 ---
 
