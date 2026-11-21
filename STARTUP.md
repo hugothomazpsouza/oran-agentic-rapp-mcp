@@ -117,6 +117,47 @@ python3 agent_rapp_ollama.py
 python3 agent_rapp.py
 ```
 
+#### Verificar se os testes foram executados com sucesso
+
+- Ler o conteúdo completo da política no Non-RT RIC (PMS — :8081)
+  Substitua <POLICY_ID> pelo ID que apareceu em policy_ids (por exemplo, pol-urllc-01 ou pol-local-01): `curl -s http://localhost:8081/a1-policy/v2/policies/<POLICY_ID> | jq .`
+
+- Confirmar que a política chegou ao Near-RT RIC simulado (:8085)
+  Para ter certeza de que o policy-agent enviou a política pela interface A1 até o simulador: `curl -s http://localhost:8085/a1-p/policytypes/1/policies/<POLICY_ID> | jq .`
+
+```bash
+(.venv) hugothomazpinheiro@vm-lab-rapp-agentico-mcp-non-rt-ric:~/agentic-rapp$ curl -s http://localhost:8081/a1-policy/v2/policies/pol-local-01 | jq .
+{
+  "policy_id": "pol-local-01",
+  "policytype_id": "1",
+  "ric_id": "ric1",
+  "policy_data": {
+    "qosObjectives": {
+      "priorityLevel": 15.0
+    },
+    "scope": {
+      "qosId": "slice-embb",
+      "ueId": "ue-002"
+    }
+  },
+  "service_id": "agentic-rapp",
+  "transient": false,
+  "status_notification_uri": ""
+}
+(.venv) hugothomazpinheiro@vm-lab-rapp-agentico-mcp-non-rt-ric:~/agentic-rapp$
+(.venv) hugothomazpinheiro@vm-lab-rapp-agentico-mcp-non-rt-ric:~/agentic-rapp$ curl -s http://localhost:8085/a1-p/policytypes/1/policies/pol-local-01 | jq .
+{
+  "qosObjectives": {
+    "priorityLevel": 15
+  },
+  "scope": {
+    "qosId": "slice-embb",
+    "ueId": "ue-002"
+  }
+}
+(.venv) hugothomazpinheiro@vm-lab-rapp-agentico-mcp-non-rt-ric:~/agentic-rapp$
+```
+
 ### Fase 2 — Loop Fechado ZSM (3 terminais)
 
 - **Terminal 1 (Simulador O1):**
