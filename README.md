@@ -242,7 +242,15 @@ python3 agent_rapp_ollama.py
 Também é possível passar qualquer intenção customizada via argumento:
 
 ```bash
+# Atualizar prioridade
 python3 agent_rapp.py "Aumente o priorityLevel da politica pol-urllc-01 para 25 por congestionamento no slice."
+curl -s http://localhost:8085/a1-p/policytypes/1/policies/pol-urllc-01 | jq .
+```
+
+```bash
+# Remover política
+python3 agent_rapp.py "Remova a politica pol-urllc-01 do ric1 pois o congestionamento acabou."
+curl -s http://localhost:8081/a1-policy/v2/policies | jq .
 ```
 
 ---
