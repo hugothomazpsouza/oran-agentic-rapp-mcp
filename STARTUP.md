@@ -13,9 +13,9 @@ docker start a1-sim-osc-0 policy-agent
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
 
-*Verifique se ambos (`policy-agent` na porta `8081` e `a1-sim-osc-0` na porta `8085`) aparecem como `Up`.*
+_Verifique se ambos (`policy-agent` na porta `8081` e `a1-sim-osc-0` na porta `8085`) aparecem como `Up`._
 
-*(Caso o `docker start` indique que os containers foram removidos, recrie-os seguindo os passos 1, 2 e 4 do `README.md` principal.)*
+_(Caso o `docker start` indique que os containers foram removidos, recrie-os seguindo os passos 1, 2 e 4 do `README.md` principal.)_
 
 ---
 
@@ -54,7 +54,8 @@ curl -X PUT "http://localhost:8085/policytype?id=1" \
     }
   }'
 ```
-*Retorno esperado:* `Policy type 1 is OK.`
+
+_Retorno esperado:_ `Policy type 1 is OK.`
 
 ---
 
@@ -67,6 +68,7 @@ curl -s http://localhost:8081/a1-policy/v2/rics | jq .
 ```
 
 **Retorno esperado:**
+
 ```json
 {
   "rics": [
@@ -80,6 +82,13 @@ curl -s http://localhost:8081/a1-policy/v2/rics | jq .
 }
 ```
 
+## Significado dos Campos na Resposta de `/a1-policy/v2/rics`
+
+- **`ric_id` (`"ric1"`)**: Identificador lógico do Near-RT RIC (`a1-sim-osc-0`, porta `8085`) ao qual as políticas A1 são direcionadas.
+- **`managed_element_ids` (`["kista_1", "kista_2"]`)**: Lista dos identificadores dos elementos de rede/células (nós gNB/RAN) gerenciados por esse Near-RT RIC via interface E2. Nesse lab, `kista_1` (`ue-001`, `slice-urllc`) e `kista_2` (`ue-002`, `slice-embb`) representam as células monitoradas e alvo das políticas de QoS.
+- **`policytype_ids` (`["1"]`)**: Tipos de política A1 (`QoS_Policy`) suportados e sincronizados no Near-RT RIC (`[]` significa que ainda não há schema sincronizado).
+- **`state` (`"AVAILABLE"`)**: Indica que o Near-RT RIC está operacional e disponível para receber políticas A1 a partir do Non-RT RIC (`policy-agent`, porta `8081`).
+
 ---
 
 ## 4. Ativar o ambiente Python (e verificar o Ollama)
@@ -92,13 +101,14 @@ source .venv/bin/activate
 ollama list
 ```
 
-*(Se for usar os scripts com **Gemini**, exporte a chave novamente na sessão atual: `export GEMINI_API_KEY="SUA_CHAVE_AQUI"`.)*
+_(Se for usar os scripts com **Gemini**, exporte a chave novamente na sessão atual: `export GEMINI_API_KEY="SUA_CHAVE_AQUI"`.)_
 
 ---
 
 ## 5. Executar os Testes
 
 ### Fase 1 — rApp Agêntico (IBN sob demanda)
+
 ```bash
 # Local (CPU / Ollama - custo zero)
 python3 agent_rapp_ollama.py
@@ -108,18 +118,19 @@ python3 agent_rapp.py
 ```
 
 ### Fase 2 — Loop Fechado ZSM (3 terminais)
-* **Terminal 1 (Simulador O1):**
+
+- **Terminal 1 (Simulador O1):**
   ```bash
   cd ~/agentic-rapp && source .venv/bin/activate
   python3 zsm_closed_loop/kpi_simulator.py
   ```
-* **Terminal 2 (Agente ZSM — escolha Ollama ou Gemini):**
+- **Terminal 2 (Agente ZSM — escolha Ollama ou Gemini):**
   ```bash
   cd ~/agentic-rapp && source .venv/bin/activate
   python3 zsm_closed_loop/zsm_rapp_ollama.py
   # ou: python3 zsm_closed_loop/zsm_rapp_gemini.py
   ```
-* **Terminal 3 (Injetar congestionamento):**
+- **Terminal 3 (Injetar congestionamento):**
   ```bash
   curl -s -X POST http://localhost:8090/scenario/congestion | jq .
   ```
@@ -131,30 +142,36 @@ python3 agent_rapp.py
 Siga esta ordem ao terminar os testes para encerrar os processos sem corromper estados e evitar cobrança desnecessária na Google Cloud:
 
 ### 6.1. Encerrar os scripts Python (Agentes e Simulador)
-* Nos terminais onde `zsm_rapp_ollama.py` / `zsm_rapp_gemini.py` e `kpi_simulator.py` estiverem rodando, pressione **`Ctrl + C`**.
-* Se algum script tiver ficado em segundo plano, garanta o encerramento:
+
+- Nos terminais onde `zsm_rapp_ollama.py` / `zsm_rapp_gemini.py` e `kpi_simulator.py` estiverem rodando, pressione **`Ctrl + C`**.
+- Se algum script tiver ficado em segundo plano, garanta o encerramento:
   ```bash
   pkill -f "zsm_rapp_|kpi_simulator.py|zsm_mcp_server.py|nonrtric_mcp_server.py"
   ```
 
 ### 6.2. Descarregar o modelo local do Ollama (opcional)
+
 ```bash
 ollama stop qwen2.5:3b
 ```
 
 ### 6.3. Parar os containers do O-RAN de forma limpa
+
 Use `docker stop` (e **não** `docker rm`), assim os containers e o arquivo `application_configuration.json` permanecem preservados para o próximo `docker start`:
 
 ```bash
 docker stop policy-agent a1-sim-osc-0
 docker ps
 ```
-*Verificação:* o `docker ps` deve retornar vazio (nenhum container rodando).
+
+_Verificação:_ o `docker ps` deve retornar vazio (nenhum container rodando).
 
 ### 6.4. Desligar a VM na Google Cloud
+
 Você pode desligar direto pelo terminal da VM (o GCP muda o status para `TERMINATED`/`STOPPED` automaticamente) ou pelo console do Google Cloud:
 
 ```bash
 sudo shutdown -h now
 ```
-*(Ou, pelo seu MacBook via `gcloud`: `gcloud compute instances stop vm-lab-rapp-agentico-mcp-non-rt-ric --zone=SUA_ZONA`.)*
+
+_(Ou, pelo seu MacBook via `gcloud`: `gcloud compute instances stop vm-lab-rapp-agentico-mcp-non-rt-ric --zone=SUA_ZONA`.)_
