@@ -85,7 +85,7 @@ newgrp docker
 Clonamos o repositório oficial da O-RAN Software Community e subimos apenas o serviço de políticas A1 (PMS):
 
 ```bash
-git clone [https://github.com/o-ran-sc/nonrtric.git](https://github.com/o-ran-sc/nonrtric.git)
+git clone https://github.com/o-ran-sc/nonrtric.git
 cd nonrtric/docker-compose
 docker compose -f docker-compose.yaml -f policy-service/docker-compose.yaml up -d
 ```
