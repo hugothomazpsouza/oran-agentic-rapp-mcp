@@ -24,6 +24,10 @@ oran-agentic-rapp-mcp/
 
 ---
 
+## Documentação Conceitual
+
+Para detalhes sobre o papel de cada componente O-RAN (Non-RT RIC, Near-RT RIC, A1 PMS, rApps, xApps, interfaces A1/E2/O1) e onde cada função fica fisicamente em produção (Torre vs. Edge vs. Cloud), consulte [docs/arquitetura-oran.md](docs/arquitetura-oran.md).
+
 ## Arquitetura do Laboratório
 
 ```text
